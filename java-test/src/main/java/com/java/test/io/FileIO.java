@@ -93,9 +93,7 @@ class StreamFilePrinter extends AbstractFilePrinter {
 
 	@Override
 	public void openFile() throws IOException {
-		if (in != null) {
-			in.close();
-		}
+		closeFile();
 		in = new FileInputStream(getFilePath());
 	}
 }
@@ -121,6 +119,7 @@ class BufferedFilePrinter extends AbstractFilePrinter {
 	}
 
 	public void openFile() throws IOException {
+		closeFile();
 		in = new LineNumberReader(new FileReader(getFilePath()));
 	}
 }
