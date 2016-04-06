@@ -1,5 +1,6 @@
 package com.java.test.io;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -94,7 +95,7 @@ class StreamFilePrinter extends AbstractFilePrinter {
 	@Override
 	public void openFile() throws IOException {
 		closeFile();
-		in = new FileInputStream(getFilePath());
+		in = new BufferedInputStream(new FileInputStream(getFilePath()));
 	}
 }
 
