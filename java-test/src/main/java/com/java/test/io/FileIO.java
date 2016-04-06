@@ -2,30 +2,48 @@ package com.java.test.io;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.LineNumberReader;
 
 interface FilePrinter {
-	void printFile() throws IOException;
-	void closeFile();
+	void printFile();
+
+	void closeFile() throws IOException;
+
+	void openFile() throws IOException;
 }
 
 abstract class AbstractFilePrinter implements FilePrinter {
-	public void printFile() throws IOException {
-		do {
-			String line = readLine();
-			if (line != null) {
-				System.out.println(line);
-			} else {
-				return;
+	// template method
+	public void printFile() {
+		try {
+			openFile();
+			do {
+				String line = readLine();
+				if (line != null) {
+					System.out.println(line);
+				} else {
+					break;
+				}
+			} while (true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				closeFile();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-		} while (true);
+		}
 	}
 
 	abstract String readLine() throws IOException;
+
+	abstract public void openFile() throws IOException;
+
+	abstract public void closeFile() throws IOException;
 
 	public AbstractFilePrinter(String filePath) {
 		this.filePath = filePath;
@@ -41,9 +59,8 @@ abstract class AbstractFilePrinter implements FilePrinter {
 class StreamFilePrinter extends AbstractFilePrinter {
 	private InputStream in = null;
 
-	public StreamFilePrinter(String filePath) throws FileNotFoundException {
+	public StreamFilePrinter(String filePath) {
 		super(filePath);
-		in = new FileInputStream(filePath);
 	}
 
 	@Override
@@ -67,14 +84,19 @@ class StreamFilePrinter extends AbstractFilePrinter {
 		return null;
 	}
 
-	public void closeFile() {
+	@Override
+	public void closeFile() throws IOException {
 		if (in != null) {
-			try {
-				in.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			in.close();
 		}
+	}
+
+	@Override
+	public void openFile() throws IOException {
+		if (in != null) {
+			in.close();
+		}
+		in = new FileInputStream(getFilePath());
 	}
 }
 
@@ -82,9 +104,8 @@ class BufferedFilePrinter extends AbstractFilePrinter {
 
 	private BufferedReader in = null;
 
-	public BufferedFilePrinter(String filePath) throws FileNotFoundException {
+	public BufferedFilePrinter(String filePath) {
 		super(filePath);
-		in = new LineNumberReader(new FileReader(filePath));
 	}
 
 	@Override
@@ -92,32 +113,26 @@ class BufferedFilePrinter extends AbstractFilePrinter {
 		return in.readLine();
 	}
 
-	public void closeFile() {
+	@Override
+	public void closeFile() throws IOException {
 		if (in != null) {
-			try {
-				in.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			in.close();
 		}
 	}
 
+	public void openFile() throws IOException {
+		in = new LineNumberReader(new FileReader(getFilePath()));
+	}
 }
 
 public class FileIO {
-	public static final String filePath = "D:\\dns.txt";
+	public static final String filePath = System.getProperty(
+			"resource.filepath", "D:\\dns.txt");
 
 	public static void main(String[] args) {
-		FilePrinter filePrinter = null;
-		try {
-			// filePrinter = new BufferedFilePrinter(filePath);
-			filePrinter = new StreamFilePrinter(filePath);
-			filePrinter.printFile();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			filePrinter.closeFile();
-		}
-		
+		FilePrinter filePrinter = new StreamFilePrinter(filePath);
+		FilePrinter filePrinterEx = new BufferedFilePrinter(filePath);
+		filePrinter.printFile();
+		filePrinterEx.printFile();
 	}
 }
