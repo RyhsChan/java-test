@@ -27,6 +27,7 @@ class InboundA extends ChannelInboundHandlerAdapter {
 		ByteBuf buf = (ByteBuf) msg;
 		System.out.println("InboundA.channelRead: "
 				+ buf.toString(StandardCharsets.UTF_8));
+
 		ctx.fireChannelRead(msg);
 	}
 }
@@ -58,6 +59,13 @@ class InboundB extends ChannelInboundHandlerAdapter {
 
 		// propagate close event from 'bottom' to 'top'
 		ctx.channel().close();
+
+		// IO operation after channel closure will cause
+		// 'ClosedChannelException' on channel future
+		ChannelFuture future = ctx.writeAndFlush(msg);
+		if (future.cause() != null) {
+			System.out.println("Exception: " + future.cause());
+		}
 	}
 }
 
